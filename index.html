@@ -1,218 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AirSketch PRO</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{
-            font-family:'Segoe UI',Tahoma,Geneva,sans-serif;
-            background:linear-gradient(135deg,#1e3c72 0%,#2a5298 50%,#667eea 100%);
-            min-height:100vh;
-            overflow:hidden;
-            position:relative;
-        }
-        body::before{
-            content:'';
-            position:fixed;top:0;left:0;right:0;bottom:0;
-            background:radial-gradient(circle at 20% 50%,rgba(120,119,255,0.4) 0%,transparent 40%),
-                        radial-gradient(circle at 80% 20%,rgba(255,119,198,0.3) 0%,transparent 40%),
-                        radial-gradient(circle at 40% 80%,rgba(120,255,198,0.3) 0%,transparent 40%);
-            animation:bgPulse 15s ease infinite;
-            z-index:-1;
-        }
-        @keyframes bgPulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.8;transform:scale(1.05);}}
-
-        .container{
-            max-width:1400px;margin:0 auto;padding:20px;height:100vh;
-            display:flex;flex-direction:column;position:relative;
-        }
-
-        /* Header */
-        .header{
-            text-align:center;padding:25px 0;position:relative;z-index:20;
-        }
-        .logo{
-            display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:15px;
-        }
-        .logo-icon{
-            width:70px;height:70px;
-            background:linear-gradient(135deg,#ff6b6b,#feca57);
-            border-radius:50%;
-            display:flex;align-items:center;justify-content:center;
-            font-size:28px;color:white;
-            box-shadow:0 15px 35px rgba(255,107,107,0.5);
-            animation:logoFloat 3s ease-in-out infinite;
-        }
-        @keyframes logoFloat{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-8px) rotate(180deg);}}
-        h1{
-            font-size:clamp(2.5rem,7vw,4.5rem);
-            font-weight:900;
-            background:linear-gradient(135deg,#fff,#f8f9ff);
-            -webkit-background-clip:text;
-            -webkit-text-fill-color:transparent;
-            letter-spacing:-1px;
-            text-shadow:0 5px 25px rgba(0,0,0,0.4);
-        }
-        .tagline{
-            font-size:1.3rem;color:rgba(255,255,255,0.95);
-            font-weight:500;margin-top:8px;
-            letter-spacing:0.5px;
-        }
-
-        /* Controls */
-        .controls{
-            display:flex;justify-content:center;gap:18px;flex-wrap:wrap;
-            padding:25px 0;position:relative;z-index:20;
-        }
-        .btn{
-            padding:15px 28px;border:none;border-radius:40px;
-            font-size:15px;font-weight:700;cursor:pointer;
-            transition:all 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
-            position:relative;overflow:hidden;
-            backdrop-filter:blur(25px);
-            min-width:140px;
-        }
-        .btn-primary{
-            background:linear-gradient(135deg,#ff6b6b,#feca57);
-            color:white;box-shadow:0 12px 35px rgba(255,107,107,0.5);
-        }
-        .btn-secondary{
-            background:rgba(255,255,255,0.12);
-            color:white;border:2px solid rgba(255,255,255,0.3);
-            backdrop-filter:blur(15px);
-        }
-        .btn:hover{transform:translateY(-6px) scale(1.03);}
-        .btn.active{box-shadow:0 0 0 0 rgba(255,107,107,1);animation:glowPulse 1.5s infinite;}
-        @keyframes glowPulse{0%{box-shadow:0 0 0 0 rgba(255,107,107,0.8);}70%{box-shadow:0 0 0 25px rgba(255,107,107,0);}100%{box-shadow:0 0 0 0 rgba(255,107,107,0);}}
-
-        /* Dual Canvas Layout */
-        .sketch-zone{
-            flex:1;display:grid;grid-template-columns:1fr 1fr;gap:30px;
-            align-items:center;padding:20px 0;min-height:500px;
-        }
-        .canvas-wrapper{
-            position:relative;height:500px;
-            border-radius:35px;overflow:hidden;
-            box-shadow:0 35px 90px rgba(0,0,0,0.5);
-            backdrop-filter:blur(35px);border:2px solid rgba(255,255,255,0.15);
-            transition:all 0.5s ease;
-        }
-        .canvas-wrapper:hover{transform:scale(1.02);}
-        #gestureCanvas,#resultCanvas{
-            width:100%;height:100%;
-            border-radius:33px;cursor:pointer;
-            touch-action:none;
-            background:linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));
-        }
-        #gestureCanvas{cursor:crosshair;}
-
-        /* Camera Overlay */
-        .camera-overlay{
-            position:absolute;top:10px;right:10px;
-            width:60px;height:60px;
-            background:rgba(255,107,107,0.9);
-            border-radius:50%;
-            display:flex;align-items:center;justify-content:center;
-            font-size:20px;color:white;
-            cursor:pointer;
-            box-shadow:0 5px 20px rgba(255,107,107,0.6);
-            transition:all 0.3s ease;
-            z-index:15;
-        }
-        .camera-overlay:hover{transform:scale(1.1);background:rgba(255,107,107,1);}
-
-        /* AI Panel */
-        .ai-magic{
-            grid-column:1/-1;
-            background:linear-gradient(145deg,rgba(255,255,255,0.08),rgba(0,0,0,0.3));
-            backdrop-filter:blur(30px);
-            border-radius:25px;
-            padding:35px;
-            border:2px solid rgba(255,255,255,0.12);
-            box-shadow:0 25px 70px rgba(0,0,0,0.4);
-            margin-top:20px;
-            opacity:0;transform:translateY(30px);transition:all 0.6s ease;
-        }
-        .ai-magic.show{opacity:1;transform:translateY(0);}
-        .ai-header{
-            display:flex;align-items:center;gap:15px;margin-bottom:25px;
-        }
-        .ai-avatar{
-            width:50px;height:50px;
-            background:linear-gradient(135deg,#ff6b6b,#feca57);
-            border-radius:50%;
-            display:flex;align-items:center;justify-content:center;
-            font-size:22px;color:white;
-            box-shadow:0 8px 25px rgba(255,107,107,0.4);
-        }
-        .ai-title{
-            font-size:1.7rem;font-weight:800;
-            background:linear-gradient(135deg,#ff6b6b,#feca57);
-            -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-        }
-        .sketch-stats{display:flex;justify-content:space-around;margin-bottom:25px;font-size:15px;}
-        .stat-item{text-align:center;}
-        .stat-value{font-size:24px;font-weight:800;color:#ff6b6b;}
-        .ai-response{
-            min-height:200px;
-            background:rgba(0,0,0,0.4);
-            border-radius:22px;
-            padding:25px;
-            margin-bottom:25px;
-            border:1px solid rgba(255,255,255,0.15);
-            font-size:16px;line-height:1.7;
-            overflow-y:auto;max-height:250px;
-        }
-        .magic-actions{display:flex;gap:15px;justify-content:center;flex-wrap:wrap;}
-        .magic-btn{
-            padding:14px 28px;
-            background:linear-gradient(135deg,#ff6b6b,#feca57);
-            color:white;border:none;
-            border-radius:30px;
-            font-size:15px;font-weight:700;
-            cursor:pointer;
-            box-shadow:0 10px 30px rgba(255,107,107,0.5);
-            transition:all 0.3s ease;
-        }
-        .magic-btn:hover{transform:translateY(-3px);box-shadow:0 15px 40px rgba(255,107,107,0.7);}
-
-        /* Status Bar */
-        .status-bar{
-            position:fixed;bottom:25px;left:50%;
-            transform:translateX(-50%);
-            background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(255,255,255,0.85));
-            backdrop-filter:blur(25px);
-            padding:16px 35px;
-            border-radius:40px;
-            font-size:15px;font-weight:600;
-            color:#333;
-            box-shadow:0 20px 50px rgba(0,0,0,0.3);
-            border:2px solid rgba(255,255,255,0.8);
-            white-space:nowrap;
-        }
-
-        /* Responsive */
-        @media (max-width:1200px){.sketch-zone{gap:20px;}}
-        @media (max-width:900px){
-            .sketch-zone{grid-template-columns:1fr;}
-            .canvas-wrapper{height:450px;}
-            .ai-magic{margin-top:15px;padding:25px;}
-        }
-        @media (max-width:600px){
-            .controls{flex-direction:column;gap:12px;}
-            .btn{width:280px;}
-            .canvas-wrapper{height:400px;}
-            .status-bar{padding:12px 25px;font-size:14px;}
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>AirSketch AI ✨</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo">
-                <div class="logo-icon">✋</div>
-                <h1>AirSketch PRO</h1
+
+<div class="toolbar">
+  <input type="color" id="colorPicker" value="#00ffcc">
+  <button onclick="clearCanvas()">🧹</button>
+  <button onclick="downloadImage()">💾</button>
+</div>
+
+<video id="video" autoplay></video>
+<canvas id="canvas"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
