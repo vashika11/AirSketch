@@ -1,28 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>AirSketch Pro 🚀</title>
+  <meta charset="UTF-8">
+  <title>AirSketch</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="menu">
+<div class="toolbar">
+  <input type="color" id="colorPicker" value="#ff0066">
   <button onclick="clearCanvas()">Clear</button>
-  <button onclick="download()">Save</button>
-  <select id="mode">
-    <option value="draw">Draw</option>
-    <option value="shape">Smart Shape</option>
-  </select>
+  <button onclick="saveImage()">Save</button>
 </div>
 
-<video id="video" autoplay></video>
+<video id="video" autoplay playsinline></video>
 <canvas id="canvas"></canvas>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
-<script src="utils.js"></script>
-<script src="gesture.js"></script>
 <script src="script.js"></script>
 
 </body>
