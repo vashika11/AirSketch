@@ -1,72 +1,89 @@
+const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const colorPicker = document.getElementById("colorPicker");
+
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-let points = [];
-let drawing = false;
+let prev = null;
 
 function clearCanvas() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function download() {
-  let a = document.createElement("a");
-  a.href = canvas.toDataURL();
-  a.download = "sketch.png";
-  a.click();
+function saveImage() {
+  const link = document.createElement("a");
+  link.download = "airsketch.png";
+  link.href = canvas.toDataURL();
+  link.click();
 }
 
-function drawLine(p1, p2) {
-  ctx.beginPath();
-  ctx.moveTo(p1.x, p1.y);
-  ctx.lineTo(p2.x, p2.y);
-  ctx.strokeStyle = "cyan";
+function draw(x, y) {
+  if (!prev) {
+    prev = {x, y};
+    return;
+  }
+
+  ctx.strokeStyle = colorPicker.value;
   ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+
+  ctx.beginPath();
+  ctx.moveTo(prev.x, prev.y);
+  ctx.lineTo(x, y);
   ctx.stroke();
+
+  prev = {x, y};
 }
 
-function drawShape(shape) {
-  if (shape === "circle") {
-    let center = points[Math.floor(points.length/2)];
-    ctx.beginPath();
-    ctx.arc(center.x, center.y, 50, 0, Math.PI*2);
-    ctx.stroke();
-  }
+const hands = new Hands({
+  locateFile: file =>
+    `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+});
 
-  if (shape === "line") {
-    drawLine(points[0], points[points.length-1]);
-  }
-}
-
-// MediaPipe setup same as before...
+hands.setOptions({
+  maxNumHands: 1,
+  minDetectionConfidence: 0.7,
+  minTrackingConfidence: 0.7
+});
 
 hands.onResults(results => {
-  if (!results.multiHandLandmarks.length) return;
+  if (!results.multiHandLandmarks.length) {
+    prev = null;
+    return;
+  }
 
-  let lm = results.multiHandLandmarks[0];
-  let gesture = getGesture(lm);
+  const lm = results.multiHandLandmarks[0];
 
   let x = lm[8].x * canvas.width;
   let y = lm[8].y * canvas.height;
 
-  if (gesture === "draw") {
-    drawing = true;
-    points.push({x, y});
+  let thumbX = lm[4].x * canvas.width;
+  let thumbY = lm[4].y * canvas.height;
 
-    if (points.length > 1) {
-      drawLine(points[points.length-2], points[points.length-1]);
-    }
+  // Pinch detection (like original site)
+  let distance = Math.hypot(x - thumbX, y - thumbY);
+
+  if (distance < 40) {
+    draw(x, y);
+  } else {
+    prev = null;
   }
 
-  if (gesture === "erase") {
-    ctx.clearRect(x-20, y-20, 40, 40);
-  }
-
-  if (gesture === "pause") {
-    drawing = false;
-    let shape = detectShape(points);
-    drawShape(shape);
-    points = [];
-  }
+  // cursor dot
+  ctx.beginPath();
+  ctx.arc(x, y, 6, 0, Math.PI * 2);
+  ctx.fillStyle = colorPicker.value;
+  ctx.fill();
 });
+
+const camera = new Camera(video, {
+  onFrame: async () => {
+    await hands.send({ image: video });
+  },
+  width: 640,
+  height: 480
+});
+
+camera.start();
